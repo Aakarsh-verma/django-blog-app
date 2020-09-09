@@ -5,6 +5,8 @@ from blog.views import get_blog_queryset
 from blog.models import BlogPost, Category
 from event.views import get_event_queryset, get_premium_queryset
 from event.models import EventPost, EventCategory
+from committee.views import get_committee_queryset
+from committee.models import Committee
 from .templatetags.my_tags import days_until
 from datetime import date, timedelta, datetime
 
@@ -139,8 +141,15 @@ def event_home_screen_view(request):
     if is_valid_queryparam(price) and price != "Choose..":
         if price == "Free":
             query = qs.filter(fee=0)
-        elif price == "Not-Free":
-            query = qs.filter(fee__gt=0)
+        elif price == "200":
+            query = qs.filter(fee__lte=200)
+        elif price == "200-500":
+            query = qs.filter(fee__gte=200, fee__lte=500)
+        elif price == "500-1000":
+            query = qs.filter(fee__gte=500, fee__lte=1000)
+        elif price == "1000":
+            query = qs.filter(fee__gte=100)
+
     else:
         qry = ""
         if request.GET:
@@ -214,3 +223,18 @@ def premium_event_screen_view(request):
     context["categorys"] = categorys
 
     return render(request, "personal/premium_events.html", context)
+
+
+def committee_home_screen_view(request):
+    context = {}
+
+    qry = ""
+    if request.GET:
+        qry = request.GET.get("q", "")
+        context["qry"] = str(qry)
+
+    query = get_committee_queryset(qry)
+
+    committee = sorted(query, key=attrgetter("date_updated"), reverse=True)
+    context["committee"] = committee
+    return render(request, "personal/committee_home.html", context)
